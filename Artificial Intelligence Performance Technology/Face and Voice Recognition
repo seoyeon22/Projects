@@ -1,0 +1,162 @@
+/*
+  https://editor.p5js.org/hsy2709/full/JN-I_JSv1
+  Implemented with p5.js and PoseNet
+*/
+
+let speech;
+let said = []; //char[]
+
+let video;
+let poseNet;
+let poses = [];
+
+let size = [];
+
+let a, b, a1, b1;
+
+
+function preload(){
+  img = loadImage("stage.png");
+}
+
+function setup() {
+  createCanvas(640, 480);
+
+
+  video=createCapture(VIDEO);
+  video.size(width, height);
+  // video.hide();
+  poseNet = ml5.poseNet(video, modelReady);
+  poseNet.on('pose', function(results) {
+    poses = results;
+  });
+  
+  speechRec = new p5.SpeechRec("ko-KR", gotSpeech);
+  let continuous = true;
+  let interimResults = false;
+  speechRec.start(continuous, interimResults);
+
+  let output = select("#speech");
+
+  function gotSpeech() {
+    if (speechRec.resultValue) {
+      said = speechRec.resultString;
+    }
+  }
+}
+
+function modelReady(){
+  console.log("OK");
+}
+
+function draw() {
+  background(img);
+  drawKeypoints();
+  drawSkeleton();
+  drawCharacter();
+  for (var i = 0; i < said.length; i++) {
+    var x, y;
+    
+    x = i;
+    y = i;
+    if (b1 >= b) {
+      y = i*random(1, 4);
+    }
+    if (b1 < b) {
+      y = i*-1*random(1, 4);
+    }
+
+    fill(255, 255, 255);
+    textSize(20);
+    text(said[i], a + x*20, b+y);
+    console.log(said[i]);
+  }
+
+}
+
+function drawKeypoints()  {
+
+    for (let i = 0; i < poses.length; i++) {
+    let pose = poses[i].pose;
+    for (let j = 5; j < pose.keypoints.length; j++) {
+      let keypoint = pose.keypoints[j];
+      if (keypoint.score > 0.2) {
+        fill(212, 160, 112);
+        noStroke();
+        ellipse(keypoint.position.x, keypoint.position.y, size[i]/2, size[i]/2);
+      }
+    }
+  }
+}
+
+function drawSkeleton() {
+  for (let i = 0; i < poses.length; i++) {
+    let skeleton = poses[i].skeleton;
+    for (let j = 0; j < skeleton.length; j++) {
+      let partA = skeleton[j][0];
+      let partB = skeleton[j][1];
+      stroke(212, 160, 112);
+      strokeWeight(size[i]*0.3);
+      line(partA.position.x, partA.position.y, partB.position.x, partB.position.y);
+    }
+  }
+}
+
+function drawCharacter(){
+  for (let i = 0; i < poses.length; i++) {
+
+    let pose = poses[i].pose;
+
+    for (let j = 0; j < pose.keypoints.length; j++) {
+
+      let nose = pose.keypoints[0].position;
+      // let eyeL = pose.keypoints[1].position;
+      // let eyeR = pose.keypoints[2].position;
+      let earL = pose.keypoints[3].position;
+      let earR = pose.keypoints[4].position;
+      let shoulderL = pose.keypoints[5].position;
+      let shoulderR = pose.keypoints[6].position;
+      // let elbowL = pose.keypoints[7].position;
+      // let elbowR = pose.keypoints[8].position;
+      let wristL = pose.keypoints[9].position;
+      let wristR = pose.keypoints[10].position;
+      let hipL = pose.keypoints[11].position;
+      let hipR = pose.keypoints[12].position;
+      // let kneeL = pose.keypoints[13].position;
+      // let kneeR = pose.keypoints[14].position;
+      let ankleL = pose.keypoints[15].position;
+      let ankleR = pose.keypoints[16].position;
+      
+      a1 = a;
+      b1 = b;
+      a= nose.x;
+      b= nose.y;
+      
+      size[i] = earL.x - earR.x;
+      
+      fill(212, 160, 112);
+      noStroke();
+      ellipse(nose.x, nose.y, size[i], size[i]*1.2);
+      
+      
+      noStroke();
+      fill(212, 160, 112);
+      beginShape();
+      vertex(shoulderR.x, shoulderR.y);
+      vertex(shoulderL.x, shoulderL.y);
+      vertex(hipL.x, hipL.y);
+      vertex(hipR.x, hipR.y);
+      endShape(CLOSE);
+      
+      stroke(200, 200, 200);
+      strokeWeight(size[i]/20);
+      line(wristR.x, wristR.y, wristR.x, 0);
+      line(wristL.x, wristR.L, wristL.x, 0);
+      line(ankleR.x, ankleR.y, ankleR.x, 0);
+      line(ankleL.x, ankleL.y, ankleL.x, 0);
+      
+      noStroke(); 
+      
+    }
+  }
+}
