@@ -1,0 +1,114 @@
+https://colab.research.google.com/drive/1LYBVazsI32-87ZsbL3JjqQnfccwvg6uy?usp=sharing
+Implemented using colab google and OpenCV
+
+import cv2 as cv
+
+from google.colab import drive
+drive.mount('/gdrive', force_remount=True)
+
+from google.colab.patches import cv2_imshow
+
+# 깃허브 소스 연결
+!pip install git+git://github.com/PnS2019/pnslib.git
+
+from pnslib import utils
+
+# 얼굴 이미지 읽어오기
+# img = cv.imread('/gdrive/My Drive/MV/image/redvelvet.jpg')
+img = cv.imread('/gdrive/My Drive/MV/image/mamamoo.jpg')
+# img = cv.imread('/gdrive/My Drive/MV/image/face_img1.jpg')
+# img = cv.imread('/gdrive/My Drive/MV/image/face_img2.jpg')
+# img = cv.imread('/gdrive/My Drive/MV/image/face_img3.jpg')
+
+# cascade classifier 로드
+file_name = 'haarcascade_frontalface_default.xml'
+face_cascade = cv.CascadeClassifier(utils.get_haarcascade_path(file_name))
+
+# 얼굴이미지를 이진화하여 cascade로 찾은 얼굴 위치를 faces에 저장
+img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+faces = face_cascade.detectMultiScale(img_gray, 1.3, 5)
+
+# 마스크 이미지를 읽어와 컬러와 흑백으로 저장
+face_mask1 = cv.imread('/gdrive/My Drive/MV/image/필수_mask.jpg')
+face_mask1_gray = cv.imread('/gdrive/My Drive/MV/image/필수_mask.jpg', 0)
+
+# 반복문으로 각 얼굴에 마스크 적용
+for(x, y, w, h) in faces:
+  # 얼굴 위치 픽셀값 저장
+  roi_gray = img_gray[y:y+h, x:x+w]
+  roi_color = img[y:y+h, x:x+w]
+
+  # 얼굴 크기에 맞게 마스크 사이즈 조절
+  face_mask1_small = cv.resize(face_mask1, (roi_color.shape[1], roi_color.shape[0]), interpolation=cv.INTER_AREA)
+  # 마스크 흑백이미지로 변환
+  face_mask1_small_gray = cv.cvtColor(face_mask1_small, cv.COLOR_BGR2GRAY)
+  # 흑백이미지 반전
+  img_not = cv.bitwise_not(face_mask1_small_gray)
+
+  # 설정한 임계값 범위에 따라 이진화
+  _, mask = cv.threshold(img_not, 50, 255, cv.THRESH_BINARY)
+  _, mask_inv = cv.threshold(img_not, 50, 255, cv.THRESH_BINARY_INV)
+
+  # 마스크 적용한 이미지 생성
+  masked_face = cv.bitwise_and(face_mask1_small, face_mask1_small, mask=mask)
+  masked_frame = cv.bitwise_and(roi_color, roi_color, mask=mask_inv)
+
+  # 얼굴 위치에 마스크 적용된 얼굴 이미지 합성
+  img[y:y+h,x:x+w] = cv.add(masked_face, masked_frame)
+
+cv2_imshow(img)
+
+from pnslib import utils
+import math
+
+# 얼굴 이미지 읽어오기
+img = cv.imread('/gdrive/My Drive/MV/image/redvelvet.jpg')
+# img = cv.imread('/gdrive/My Drive/MV/image/faces_img.jpg')
+# img = cv.imread('/gdrive/My Drive/MV/image/face_img1.jpg')
+# img = cv.imread('/gdrive/My Drive/MV/image/face_img2.jpg')
+# img = cv.imread('/gdrive/My Drive/MV/image/face_img3.jpg')
+
+# cascade classifier 로드
+face_cascade = cv.CascadeClassifier(
+    utils.get_haarcascade_path('haarcascade_frontalface_default.xml'))
+
+# 얼굴 이미지 흑백으로 저장
+img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+
+# 얼굴 이미지를 이진화하여 cascade로 찾은 얼굴 위치를 faces에 저장
+faces = face_cascade.detectMultiScale(img_gray, 1.3, 5)
+
+# 마스크 이미지를 읽어와 컬러와 흑백으로 저장
+face_mask2 = cv.imread('/gdrive/My Drive/MV/image/선택_mask4.png')
+face_mask2_gray = cv.imread('/gdrive/My Drive/MV/image/선택_mask4.png', 0)
+
+# 반복문으로 각 얼굴에 마스크 적용
+for(x, y, w, h) in faces:
+  # 얼굴에 적용할 마스크 위치 설정
+  x += math.floor(w/11)
+  y += math.floor(h/2.2)
+  # 얼굴 크기에 맞는 마스크 크기 설정
+  h = math.floor(h/1.7)
+  w = math.floor(w/1.2)
+  
+  # 마스크 위치 픽셀값 저장
+  roi_gray = img_gray[y:y+h, x:x+w]
+  roi_color = img[y:y+h, x:x+w]
+
+  # 얼굴 크기에 맞게 마스크 사이즈 조절
+  face_mask2_small = cv.resize(face_mask2, (roi_color.shape[1], roi_color.shape[0]), interpolation=cv.INTER_AREA)
+  # 마스크 흑백이미지로 변환
+  face_mask2_small_gray = cv.cvtColor(face_mask2_small, cv.COLOR_BGR2GRAY)
+
+  # 설정한 임계값 범위에 따라 이진화
+  _, mask = cv.threshold(face_mask2_small_gray, 127, 255, cv.THRESH_BINARY)
+  _, mask_inv = cv.threshold(face_mask2_small_gray, 127, 255, cv.THRESH_BINARY_INV)
+  
+  # 마스크 적용한 이미지 생성
+  masked_face = cv.bitwise_and(face_mask2_small, face_mask2_small, mask=mask)
+  masked_frame = cv.bitwise_and(roi_color, roi_color, mask=mask_inv)
+
+  # 얼굴 위치에 마스크 적용된 얼굴 이미지 합성
+  img[y:y+h, x:x+w] = cv.add(masked_face, masked_frame)
+
+cv2_imshow(img)
