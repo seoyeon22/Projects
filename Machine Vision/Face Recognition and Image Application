@@ -1,5 +1,7 @@
-https://colab.research.google.com/drive/1LYBVazsI32-87ZsbL3JjqQnfccwvg6uy?usp=sharing
-Implemented using colab google and OpenCV
+/*
+  https://colab.research.google.com/drive/1LYBVazsI32-87ZsbL3JjqQnfccwvg6uy?usp=sharing
+  Implemented using colab google and OpenCV
+*/
 
 import cv2 as cv
 
